@@ -16,14 +16,14 @@
             position: absolute;
             top: 20px;
             left: 20px;
-            background: rgba(142, 68, 173, 0.9);
+            background: rgba(142, 68, 173, 0.95);
             border: 2px solid #a55eea;
             color: white;
             padding: 12px 20px;
             border-radius: 10px;
             font-size: 18px;
             font-weight: 600;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             max-width: 400px;
             word-wrap: break-word;
             z-index: 10;
@@ -39,7 +39,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 </head>
 <body>
-    <button id="start-btn" onclick="this.style.display='none'">OH ! CLIQUE ICI CHACAL</button>
+    <button id="start-btn" onclick="this.style.display='none'">CLIQUE ICI POUR ACTIVER L'OVERLAY</button>
 
     <div id="container"></div>
 
@@ -77,26 +77,30 @@
                 audio.play().catch(e => console.error("Erreur audio:", e));
             }
             else if (data.type === 'tts') {
+                const authorName = data.author || 'Un membre';
+                
+                // Affichage du cadre violet en haut à gauche
                 const ttsBox = document.createElement('div');
                 ttsBox.id = 'tts-box';
                 ttsBox.className = 'fade-in';
-                
-                const authorName = data.author || 'Un membre';
                 ttsBox.innerText = `${authorName} dit : ${data.text}`;
                 container.appendChild(ttsBox);
 
-                if ('speechSynthesis' in window) {
-                    const utterance = new SpeechSynthesisUtterance(`${authorName} dit : ${data.text}`);
-                    utterance.lang = 'fr-FR';
-                    utterance.rate = 1.0;
+                // Lecture du fichier audio MP3 généré
+                if (data.audio_url) {
+                    const audio = new Audio(data.audio_url);
+                    audio.play().catch(e => console.error("Erreur lecture MP3 TTS:", e));
                     
-                    utterance.onend = () => {
+                    audio.onended = () => {
                         setTimeout(() => { container.innerHTML = ''; }, 1000);
                     };
 
-                    window.speechSynthesis.speak(utterance);
+                    // Sécurité si l'audio ne se termine pas proprement
+                    setTimeout(() => {
+                        container.innerHTML = '';
+                    }, 15000);
                 } else {
-                    setTimeout(() => { container.innerHTML = ''; }, 6000);
+                    setTimeout(() => { container.innerHTML = ''; }, 5000);
                 }
             }
         });
